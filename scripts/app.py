@@ -66,7 +66,6 @@ if uploaded_file is not None:
 
 # Camera option
 if os.environ.get("STREAMLIT_SERVER", "false") != "true":
-
     if st.button("Start Camera"):
         stframe = st.empty()  # placeholder for video frame
         cap = cv2.VideoCapture(0)
@@ -96,4 +95,7 @@ if os.environ.get("STREAMLIT_SERVER", "false") != "true":
                 break
 
         cap.release()
-        cv2.destroyAllWindows()
+else:
+    st.warning("Camera is not supported in Streamlit Cloud. Please use the image upload option.")
+
+        
