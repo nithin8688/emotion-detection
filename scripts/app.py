@@ -10,8 +10,18 @@ from PIL import Image
 
 # Load your trained model
 MODEL_DIR = "models"
+os.makedirs(MODEL_DIR, exist_ok=True)
 model_path = os.path.join(MODEL_DIR, "emotion_model.h5")
-model = load_model(model_path)
+
+# Download model if not present locally
+if not os.path.exists(model_path):
+    gdown.download(
+        "https://drive.google.com/uc?id=1o35K3aLULq2WeCHt-KRiDaW_K21Fg8aB",
+        model_path,
+        quiet=False
+    )
+model = load_model(model_path, compile=False)
+
 
 # Emotion labels
 label_map = {0:'angry', 1:'disgust', 2:'fear', 3:'happy', 4:'neutral', 5:'sad', 6:'surprise'}
@@ -54,36 +64,35 @@ if uploaded_file is not None:
     st.image(cv2.cvtColor(result_img, cv2.COLOR_BGR2RGB), caption=f"Prediction: {label}")
 
 # Camera option
-import cv2
-import streamlit as st
+if os.environ.get("STREAMLIT_SERVER", "false") != "true":
 
-if st.button("Start Camera"):
-    stframe = st.empty()  # placeholder for video frame
-    cap = cv2.VideoCapture(0)
+    if st.button("Start Camera"):
+        stframe = st.empty()  # placeholder for video frame
+        cap = cv2.VideoCapture(0)
 
-    stop_button = st.button("Stop Camera")
+        stop_button = st.button("Stop Camera")
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            st.warning("Failed to grab frame.")
-            break
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                st.warning("Failed to grab frame.")
+                break
 
-        # Run emotion prediction
-        result_img, label = predict_emotion(frame)
-        rgb_frame = cv2.cvtColor(result_img, cv2.COLOR_BGR2RGB)
+            # Run emotion prediction
+            result_img, label = predict_emotion(frame)
+            rgb_frame = cv2.cvtColor(result_img, cv2.COLOR_BGR2RGB)
 
-        # Update single frame in UI
-        stframe.image(rgb_frame, caption=f"Prediction: {label}", width=720)
+            # Update single frame in UI
+            stframe.image(rgb_frame, caption=f"Prediction: {label}", width=720)
 
-        # Check for stop button
-        if stop_button:
-            break
+            # Check for stop button
+            if stop_button:
+                break
 
-        # Check for keyboard quit keys
-        key = cv2.waitKey(1) & 0xFF
-        if key in [ord('q'), ord('e'), ord('z')]:
-            break
+            # Check for keyboard quit keys
+            key = cv2.waitKey(1) & 0xFF
+            if key in [ord('q'), ord('e'), ord('z')]:
+                break
 
-    cap.release()
-    cv2.destroyAllWindows()
+        cap.release()
+        cv2.destroyAllWindows()
