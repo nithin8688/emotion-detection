@@ -65,9 +65,11 @@ if uploaded_file is not None:
     st.image(cv2.cvtColor(result_img, cv2.COLOR_BGR2RGB), caption=f"Prediction: {label}")
 
 # Camera option
-if os.environ.get("STREAMLIT_SERVER", "false") != "true":
-    if st.button("Start Camera"):
-        stframe = st.empty()  # placeholder for video frame
+if st.button("Start Camera"):
+    if "STREAMLIT_CLOUD" in os.environ:  # or just hard-disable for cloud
+        st.warning("Camera is not supported on Streamlit Cloud. Please use the image upload option.")
+    else:
+        stframe = st.empty()
         cap = cv2.VideoCapture(0)
 
         stop_button = st.button("Stop Camera")
@@ -78,16 +80,13 @@ if os.environ.get("STREAMLIT_SERVER", "false") != "true":
                 st.warning("Failed to grab frame.")
                 break
 
-            # Run emotion prediction
             result_img, label = predict_emotion(frame)
             rgb_frame = cv2.cvtColor(result_img, cv2.COLOR_BGR2RGB)
-
-            # Update single frame in UI
             stframe.image(rgb_frame, caption=f"Prediction: {label}", width=720)
 
-            # Check for stop button
             if stop_button:
                 break
+
 
             # Check for keyboard quit keys
             key = cv2.waitKey(1) & 0xFF
@@ -95,7 +94,3 @@ if os.environ.get("STREAMLIT_SERVER", "false") != "true":
                 break
 
         cap.release()
-else:
-    st.warning("Camera is not supported in Streamlit Cloud. Please use the image upload option.")
-
-        
